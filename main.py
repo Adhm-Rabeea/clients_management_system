@@ -1,10 +1,26 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import sqlite3
 
+# ============ Database ============
+
 # Connect to the database
-db = sqlite3.connect("clients.db")
-cur = db.cursor()
+with sqlite3.connect("clients.db") as conn:
+    cur = conn.cursor()
+
+    # Create Table
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS clients (
+      address TEXT,
+      gender TEXT,
+      email TEXT UNIQUE,
+      phone TEXT,
+      name TEXT,
+      id INTEGER PRIMARY KEY
+      )"""
+    )
+    conn.commit()
 
 
 # ============ Main window ============
@@ -16,29 +32,88 @@ root.iconbitmap(r"images\management.ico")
 root.configure(background="#c2c2c2")
 
 # ============ Variables ============
-client_id = StringVar()
 name = StringVar()
+gender = StringVar()
 phone = StringVar()
 email = StringVar()
-gender = StringVar()
 address = StringVar()
+client_id = StringVar()
 
 
 # ============ Functions ============
-def add():
-    pass
+def felids_not_empty():
+    felids = [name.get(), gender.get(), phone.get(), email.get(), address.get()]
+    for i in felids:
+        if len(i) < 2:
+            return False
+    else:
+        return True
+
+
+def shows_clients():
+  
+    cur.execute("SELECT * FROM `clients`")
+    rows = cur.fetchall()
+    clients_table.delete(*clients_table.get_children())
+    for row in rows:
+        clients_table.insert("", "end", values=row)
+        conn.commit()
+
+
+def add_client():
+    if felids_not_empty():
+        try:
+            with sqlite3.connect("clients.db") as conn:
+                cur = conn.cursor()
+
+                cur.execute(
+                    f"""INSERT INTO `clients` (address,gender,email,phone,name) VALUES(
+                ?,?,?,?,?)""",
+                    (
+                        address.get(),
+                        gender.get(),
+                        email.get(),
+                        phone.get(),
+                        name.get(),
+                    ),
+                )
+                conn.commit()
+        except:
+            messagebox.showerror(title="Error", message="البريد الإلكتروني موجود")
+
+    else:
+        messagebox.showerror(title="Error", message="لا يمكن إضافة حقل فارغ")
+
+    shows_clients()
+
+
+def delete_client():
+    cursor_row = clients_table.focus()
+    client_id_to_del = clients_table.item(cursor_row)["values"][5]
+    print(client_id_to_del)
+
+    if messagebox.askquestion(title="حذف عميل", message="حذف العميل") == "yes":
+        with sqlite3.connect("clients.db") as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM `clients` WHERE id = ?", (client_id_to_del,))
+            conn.commit()
+        shows_clients()
 
 
 def update():
     pass
 
 
-def delete():
-    pass
-
-
 def search():
     pass
+
+
+def empty_felids():
+    name.set("")
+    phone.set("")
+    email.set("")
+    gender.set("")
+    address.set("")
 
 
 # ============ Control Panel ============
@@ -79,15 +154,23 @@ frame_title_options = {
 add_title = Label(control_frame, text="إضافة عميل", **frame_title_options)
 add_title.pack(fill=X)
 
-id_lb = Label(control_frame, text="Id", **label_options)
-id_lb.pack()
-id_ent = Entry(control_frame, **entry_options, textvariable=client_id)
-id_ent.pack()
-
 name_lb = Label(control_frame, text="الأسم", **label_options)
 name_lb.pack()
 name_ent = Entry(control_frame, **entry_options, textvariable=name)
 name_ent.pack()
+
+gender_lb = Label(control_frame, text="النوع", **label_options)
+gender_lb.pack()
+gender_ent = ttk.Combobox(
+    control_frame,
+    values=("ذكر", "أنثي"),
+    font=("Dubai", 12),
+    width=23,
+    state="readonly",
+    textvariable=gender,
+    justify="center",
+)
+gender_ent.pack()
 
 phone_lb = Label(control_frame, text="رقم الهاتف المحمول", **label_options)
 phone_lb.pack()
@@ -99,26 +182,16 @@ email_lb.pack()
 email_ent = Entry(control_frame, **entry_options, textvariable=email)
 email_ent.pack()
 
-gender_lb = Label(control_frame, text="النوع", **label_options)
-gender_lb.pack()
-gender_ent = ttk.Combobox(
-    control_frame,
-    values=("ذكر", "أنثي"),
-    font=("Dubai", 12),
-    width=23,
-    state="readonly",
-    textvariable=gender,
-)
-gender_ent.pack()
 
 address_lb = Label(control_frame, text="العنوان", **label_options)
 address_lb.pack()
 address_ent = Entry(control_frame, **entry_options, textvariable=address)
 address_ent.pack()
 
+
 # ========= Buttons =========
 bt_options = {
-    "font": ("Dubai", 12, "bold"),
+    "font": ("Dubai", 11, "bold"),
     "cursor": "hand2",
     "width": 20,
     "relief": "raised",
@@ -126,12 +199,13 @@ bt_options = {
     "bg": "#35f8ae",
 }
 
-y = 480
-x = 55
+# place value
+y = 400
+x = 60
+
 # --- Add
-add_bt = Button(
-    control_frame, text="إضافة", **bt_options, command=lambda: print(name.get())
-)
+add_bt = Button(control_frame, text="إضافة", **bt_options, command=add_client)
+
 add_bt.place(y=y, x=x)
 
 # --- Update
@@ -139,8 +213,23 @@ update_bt = Button(control_frame, text="تحديث", **bt_options)
 update_bt.place(y=y + 55, x=x)
 
 # --- Delete
-delete_bt = Button(control_frame, text="حذف", **bt_options)
+delete_bt = Button(
+    control_frame,
+    text="حذف",
+    **bt_options,
+    command=delete_client,
+)
 delete_bt.place(y=y + 110, x=x)
+
+# --- Clear
+clear_bt = Button(
+    control_frame,
+    text="إفراغ الحقول",
+    **bt_options,
+    command=empty_felids,
+)
+clear_bt.place(y=y + 165, x=x)
+
 
 # ============  Search ============
 search_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=1040, height=60)
@@ -156,8 +245,6 @@ search_ent = Entry(
 )
 search_ent.place(x=x, y=10)
 
-search_img = PhotoImage(file=r"images\icons8-search-28.png")
-# image=search_img,
 search_bt = Button(
     search_frame,
     text="بحث",
@@ -190,16 +277,16 @@ style.configure("Treeview", rowheight=35)
 # Create Treeview
 clients_table = ttk.Treeview(
     clients_frame,
-    columns=("address", "email", "phone", "gender", "name", "id"),
+    columns=("address", "gender", "email", "phone", "name", "id"),
     show="headings",
 )
 clients_table.place(x=18, y=0, height=610, width=1018)
 
 clients_table.heading("id", text="Id")
 clients_table.heading("name", text="الأسم")
-clients_table.heading("gender", text="النوع")
 clients_table.heading("phone", text="رقم الهاتف")
 clients_table.heading("email", text="البريد الإلكتروني")
+clients_table.heading("gender", text="النوع")
 clients_table.heading("address", text="العنوان")
 
 # Format Columns
@@ -219,33 +306,9 @@ scroll_y.place(x=1, height=610)
 
 clients_table.config(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
 
-# Insert Data
-clients_table.insert(
-    "",
-    "end",
-    values=(
-        "مصر, محافظة قنا, مركز فرشوط قرية العسيرات\n",
-        "aaaaaadhmrabee9@.com",
-        f"+962 0779529892",
-        "ذكر",
-        f"ادهم ربيع احمد محمد عثمان",
-        1,
-    ),
-)
-clients_table.insert(
-    "",
-    "end",
-    values=(
-        "مصر, محافظة قنا, مركز فرشوط قرية العسيرات\n",
-        "aaaaaadhmrabee9@.com",
-        f"+962 0779529892",
-        "ذكر",
-        f"رضا عبدالمنعم محمد",
-        1,
-    ),
-)
+
+shows_clients()
 
 
 # ============ Run App ============
-
 root.mainloop()
