@@ -51,7 +51,7 @@ def felids_not_empty():
 
 
 def shows_clients():
-  
+
     cur.execute("SELECT * FROM `clients`")
     rows = cur.fetchall()
     clients_table.delete(*clients_table.get_children())
@@ -106,6 +106,28 @@ def update():
 
 def search():
     pass
+
+def client_widow(event):
+    selected=clients_table.selection()
+    if selected:
+      window = Tk()
+      window.geometry("400x400")
+
+      client_data = clients_table.item(selected)["values"]
+      lb = Label(window,text=f"{client_data[4]}")
+      lb.pack()
+
+      window.mainloop()
+
+def fetch_client_data():
+    client_selected = clients_table.selection()
+    client_data = clients_table.item(client_selected)["values"]
+
+    name.set(client_data[4])
+    phone.set(client_data[3])
+    email.set(client_data[2])
+    gender.set(client_data[1])
+    address.set(client_data[0])
 
 
 def empty_felids():
@@ -212,15 +234,6 @@ add_bt.place(y=y, x=x)
 update_bt = Button(control_frame, text="تحديث", **bt_options)
 update_bt.place(y=y + 55, x=x)
 
-# --- Delete
-delete_bt = Button(
-    control_frame,
-    text="حذف",
-    **bt_options,
-    command=delete_client,
-)
-delete_bt.place(y=y + 110, x=x)
-
 # --- Clear
 clear_bt = Button(
     control_frame,
@@ -228,7 +241,7 @@ clear_bt = Button(
     **bt_options,
     command=empty_felids,
 )
-clear_bt.place(y=y + 165, x=x)
+clear_bt.place(y=y + 110, x=x)
 
 
 # ============  Search ============
@@ -263,6 +276,12 @@ options.add_command(label="إعادة تعيين")
 
 menubar.add_cascade(label="خيارات", menu=options)
 root.config(menu=menubar)
+
+
+# --- Menu click
+right_click_menu = Menu(root, tearoff=0)
+right_click_menu.add_command(label="تعديل", command=fetch_client_data)
+right_click_menu.add_command(label="حذف", command=delete_client)
 
 # ============ Show clients ============
 
@@ -308,6 +327,18 @@ clients_table.config(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
 
 
 shows_clients()
+
+
+# ============ Events ============
+def right_click(event):
+    item = clients_table.identify_row(event.y)
+    if item:
+        clients_table.selection_set(item)
+        right_click_menu.tk_popup(event.x_root, event.y_root)  # عرض القائمة
+
+
+clients_table.bind("<Button-3>", right_click)
+clients_table.bind("<Double-1>", client_widow)
 
 
 # ============ Run App ============
