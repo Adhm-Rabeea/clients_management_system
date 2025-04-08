@@ -27,6 +27,7 @@ with sqlite3.connect("clients.db") as conn:
 root = Tk()
 
 root.state("zoomed")
+# root.resizable(True,False)
 root.title("إدارة العملاء")
 root.iconbitmap(r"images\management.ico")
 root.configure(background="#c2c2c2")
@@ -52,8 +53,10 @@ def felids_not_empty():
 
 def shows_clients():
 
-    cur.execute("SELECT * FROM `clients`")
-    rows = cur.fetchall()
+    with sqlite3.connect("clients.db") as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM `clients`")
+        rows = cur.fetchall()
     clients_table.delete(*clients_table.get_children())
     for row in rows:
         clients_table.insert("", "end", values=row)
@@ -70,14 +73,16 @@ def add_client():
                     f"""INSERT INTO `clients` (address,gender,email,phone,name) VALUES(
                 ?,?,?,?,?)""",
                     (
-                        address.get(),
-                        gender.get(),
-                        email.get(),
-                        phone.get(),
-                        name.get(),
+                        address.get().strip(),
+                        gender.get().strip(),
+                        email.get().strip(),
+                        phone.get().strip(),
+                        name.get().strip(),
                     ),
                 )
                 conn.commit()
+                empty_felids()
+                
         except:
             messagebox.showerror(title="Error", message="البريد الإلكتروني موجود")
 
@@ -88,9 +93,8 @@ def add_client():
 
 
 def delete_client():
-    cursor_row = clients_table.focus()
+    cursor_row = clients_table.selection()
     client_id_to_del = clients_table.item(cursor_row)["values"][5]
-    print(client_id_to_del)
 
     if messagebox.askquestion(title="حذف عميل", message="حذف العميل") == "yes":
         with sqlite3.connect("clients.db") as conn:
@@ -100,34 +104,64 @@ def delete_client():
         shows_clients()
 
 
-def update():
-    pass
+def update_client():
+    cursor_row = clients_table.selection()
+    selected_client_id = clients_table.item(cursor_row)["values"]
+
+    if selected_client_id:
+        with sqlite3.connect("clients.db") as conn:  #
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE `clients` SET address = ?, email = ?, phone = ?, gender = ?, name = ? WHERE id = ?",
+                (
+                    address.get().strip(),
+                    email.get().strip(),
+                    phone.get().strip(),
+                    gender.get().strip(),
+                    name.get().strip(),
+                    selected_client_id[5],
+                ),
+            )
+            conn.commit()
+        shows_clients()
 
 
 def search():
     pass
 
+
 def client_widow(event):
-    selected=clients_table.selection()
+    selected = clients_table.selection()
     if selected:
-      window = Tk()
-      window.geometry("400x400")
+        window = Tk()
+        window.geometry("400x400")
+        window.iconbitmap(r"images\management.ico")
+        window.configure(background="#c2c2c2")
+        client_data = clients_table.item(selected)["values"]
+        window.title(f"{client_data[4]}")
+        window.resizable(False,False)
 
-      client_data = clients_table.item(selected)["values"]
-      lb = Label(window,text=f"{client_data[4]}")
-      lb.pack()
+        lb = Label(window, text=f"تفاصيل",font=("Dubai",14,"bold"))
+        lb.pack(pady=100)
 
-      window.mainloop()
+        window.mainloop()
+
 
 def fetch_client_data():
     client_selected = clients_table.selection()
     client_data = clients_table.item(client_selected)["values"]
 
     name.set(client_data[4])
-    phone.set(client_data[3])
     email.set(client_data[2])
     gender.set(client_data[1])
     address.set(client_data[0])
+
+    # Set Phone with zero
+    with sqlite3.connect("clients.db") as conn:
+        cur = conn.cursor()
+        cur.execute(f"SELECT phone FROM `clients` WHERE id = ?", (client_data[5],))
+        client_phone = cur.fetchone()
+        phone.set(client_phone[0])
 
 
 def empty_felids():
@@ -144,10 +178,10 @@ style.configure("TNotebook.Tab", font=("Dubai", 12))
 control_panel = ttk.Notebook(root)
 control_panel.place(x=1050, y=1)
 
-control_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=700)
+control_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=640)
 control_frame.pack()
 
-details_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=700)
+details_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=640)
 details_frame.pack()
 
 control_panel.add(details_frame, text="التفاصيل")
@@ -231,7 +265,7 @@ add_bt = Button(control_frame, text="إضافة", **bt_options, command=add_clie
 add_bt.place(y=y, x=x)
 
 # --- Update
-update_bt = Button(control_frame, text="تحديث", **bt_options)
+update_bt = Button(control_frame, text="تحديث", **bt_options, command=update_client)
 update_bt.place(y=y + 55, x=x)
 
 # --- Clear
@@ -245,9 +279,9 @@ clear_bt.place(y=y + 110, x=x)
 
 
 # ============  Search ============
-search_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=1040, height=60)
+search_frame = Frame(root, bg="#f2f3f4", bd=2, relief="sunken", width=1040, height=45)
 search_frame.place(y=2, x=5)
-x = 600
+x = 400
 search_ent = Entry(
     search_frame,
     font=("Dubai", 11),
@@ -256,7 +290,7 @@ search_ent = Entry(
     bd=2,
     width=50,
 )
-search_ent.place(x=x, y=10)
+search_ent.place(x=x, y=5)
 
 search_bt = Button(
     search_frame,
@@ -267,7 +301,7 @@ search_bt = Button(
     cursor="hand2",
     relief="raised",
 )
-search_bt.place(x=x - 85, y=10)
+search_bt.place(x=x - 85, y=5)
 
 # ============ Menubar ============
 menubar = Menu(root)
@@ -283,10 +317,10 @@ right_click_menu = Menu(root, tearoff=0)
 right_click_menu.add_command(label="تعديل", command=fetch_client_data)
 right_click_menu.add_command(label="حذف", command=delete_client)
 
-# ============ Show clients ============
 
+# ============ Show clients ============
 clients_frame = Frame(root, bg="white", width=1040, height=630, bd=2, relief="sunken")
-clients_frame.place(x=5, y=70)
+clients_frame.place(x=5, y=50)
 
 # Configure Treeview
 style.configure("Treeview.Heading", font=("Dubai", 13, "bold"))
