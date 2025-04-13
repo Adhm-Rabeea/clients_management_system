@@ -41,6 +41,7 @@ class ManagementSystem:
         self.email = StringVar()
         self.address = StringVar()
         self.client_id = StringVar()
+        self.search_var = StringVar()
 
         # ============ Control Panel ============
         style = ttk.Style()
@@ -154,31 +155,34 @@ class ManagementSystem:
         clear_bt.place(y=y + 110, x=x)
 
         # ============  Search ============
-        search_frame = Frame(
-            root, bg="#f2f3f4", bd=2, relief="sunken", width=1040, height=45
+        self.search_frame = Frame(
+            root, bg="#f2f3f4", bd=2,  width=1044, height=45
         )
-        search_frame.place(y=2, x=5)
-        x = 400
+        self.search_frame.place(y=2, x=5)
+
+        x = 350
         search_ent = Entry(
-            search_frame,
+            self.search_frame,
             font=("Dubai", 11),
             relief="ridge",
             justify="center",
             bd=2,
             width=50,
+            textvariable=self.search_var,
         )
-        search_ent.place(x=x, y=5)
+        search_ent.place(x=x, y=2)
 
         search_bt = Button(
-            search_frame,
+            self.search_frame,
             text="بحث",
-            font=("", 11, "bold"),
+            font=("", 10, "bold"),
             width=8,
             bg="#35f8ae",
             cursor="hand2",
             relief="raised",
+            command=self.search,
         )
-        search_bt.place(x=x - 85, y=5)
+        search_bt.place(x=x - 80, y=4)
 
         # ============ Menubar ============
         menubar = Menu(root)
@@ -194,10 +198,13 @@ class ManagementSystem:
         self.right_click_menu.add_command(label="حذف", command=self.delete_client)
 
         # ============ Show clients ============
-        clients_frame = Frame(
-            root, bg="white", width=1040, height=630, bd=2, relief="sunken"
+        self.clients_frame = Frame(
+            root, bg="white", width=1044, height=634, bd=2, relief="sunken"
         )
-        clients_frame.place(x=5, y=50)
+        self.clients_frame.place(x=5, y=45)
+
+        self.info_frame = Frame(self.clients_frame, bd=2, bg="#c2c2c2")
+        self.info_frame.place(x=1, y=608, height=23, width=1040)
 
         # Configure Treeview
         style.configure("Treeview.Heading", font=("Dubai", 13, "bold"))
@@ -206,11 +213,11 @@ class ManagementSystem:
 
         # Create Treeview
         self.clients_table = ttk.Treeview(
-            clients_frame,
+            self.clients_frame,
             columns=("address", "gender", "email", "phone", "name", "id"),
             show="headings",
         )
-        self.clients_table.place(x=18, y=0, height=610, width=1018)
+        self.clients_table.place(x=18, y=0, height=590, width=1040)
 
         self.clients_table.heading("id", text="Id")
         self.clients_table.heading("name", text="الأسم")
@@ -231,14 +238,14 @@ class ManagementSystem:
 
         # Scrollbar
         scroll_x = Scrollbar(
-            clients_frame, orient=HORIZONTAL, command=self.clients_table.xview
+            self.clients_frame, orient=HORIZONTAL, command=self.clients_table.xview
         )
-        scroll_x.place(x=1, y=610, width=1035)
+        scroll_x.place(x=1, y=590, width=1040)
 
         scroll_y = Scrollbar(
-            clients_frame, orient=VERTICAL, command=self.clients_table.yview
+            self.clients_frame, orient=VERTICAL, command=self.clients_table.yview
         )
-        scroll_y.place(x=1, height=610)
+        scroll_y.place(x=1, height=590)
 
         self.clients_table.config(
             xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set
@@ -275,6 +282,27 @@ class ManagementSystem:
             cur = conn.cursor()
             cur.execute("SELECT * FROM `clients`")
             rows = cur.fetchall()
+
+            # Show clients count in search frame
+            clients_count = len(rows)
+            count_lb = Label(
+                self.info_frame,
+                text=f"Count: {clients_count}",
+                font=("", 10, ""),
+                bg="#c2c2c2",
+            )
+            count_lb.place(x=10)
+
+            # count_value = Label(
+            #     self.info_frame,
+            #     text=clients_count,
+            #     font=("", 10, "bold"),
+            #     bg="#c2c2c2",
+            #     width=4
+            # )
+            # count_value.place(x=55)
+
+        # Show clients in treeview
         self.clients_table.delete(*self.clients_table.get_children())
         for row in rows:
             self.clients_table.insert("", "end", values=row)
@@ -299,6 +327,8 @@ class ManagementSystem:
                     )
                     conn.commit()
                     self.empty_felids()
+                messagebox.showinfo(title="إضافة", message="نم إضافة العميل بنجاح")
+
 
             except:
                 messagebox.showerror(title="Error", message="البريد الإلكتروني موجود")
@@ -339,9 +369,52 @@ class ManagementSystem:
                 )
                 conn.commit()
             self.shows_clients()
+            self.empty_felids()
+            messagebox.showinfo(title="تحديث",message="تم تحديث بيانات العميل بنجاح")
 
     def search(self):
-        pass
+
+        with sqlite3.connect("clients.db") as conn:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT * FROM `clients` 
+                WHERE `id` = ? 
+                OR 
+                `name` LIKE ? 
+                OR 
+                `email` LIKE ? 
+                OR 
+                `phone` LIKE ? 
+                OR 
+                `address` LIKE ? 
+                """,
+                (
+                    self.search_var.get(),
+                    f"%{self.search_var.get()}%",
+                    f"%{self.search_var.get()}%",
+                    f"{self.search_var.get()}%",
+                    f"%{self.search_var.get()}%",
+                ),
+            )
+            rows = cur.fetchall()
+
+            # Show clients count in search frame
+            clients_count = len(rows)
+            count_lb = Label(
+                self.info_frame,
+                text=f"Count: {clients_count}",
+                font=("", 10, ""),
+                bg="#c2c2c2",
+                width=10,
+            )
+            count_lb.place(x=1)
+
+        # Show clients in treeview
+        self.clients_table.delete(*self.clients_table.get_children())
+        for row in rows:
+            self.clients_table.insert("", "end", values=row)
+            conn.commit()
 
     def client_widow(self, event):
         selected = self.clients_table.selection()
