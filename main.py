@@ -1,38 +1,37 @@
-from tkinter import *
+from customtkinter import *
+import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+
 import sqlite3
 
-# ============ Database ============
 
 # Connect to the database
-with sqlite3.connect("clients.db") as conn:
+with sqlite3.connect("persons.db") as conn:
     cur = conn.cursor()
 
     # Create Table
     cur.execute(
-        """CREATE TABLE IF NOT EXISTS clients (
-      address TEXT,
-      gender TEXT,
-      email TEXT UNIQUE,
-      phone TEXT,
-      name TEXT,
-      id INTEGER PRIMARY KEY
-      )"""
+        """CREATE TABLE IF NOT EXISTS persons (
+    address TEXT,
+    gender TEXT,
+    email TEXT UNIQUE,
+    phone TEXT,
+    name TEXT,
+    id INTEGER PRIMARY KEY
+    )"""
     )
     conn.commit()
 
 
-# ============ Main window ============
 class ManagementSystem:
     def __init__(self, root):
-
         self.root = root
+        self.root.title("نظام إدارة")
         self.root.state("zoomed")
-        # root.resizable(True,False)
-        self.root.title("إدارة العملاء")
+        # self.root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}")
+        self.root.resizable(False, False)
         self.root.iconbitmap(r"images\management.ico")
-        self.root.configure(background="#c2c2c2")
 
         # ============ Variables ============
         self.name = StringVar()
@@ -40,228 +39,287 @@ class ManagementSystem:
         self.phone = StringVar()
         self.email = StringVar()
         self.address = StringVar()
-        self.client_id = StringVar()
+        self.person_id = StringVar()
         self.search_var = StringVar()
 
-        # ============ Control Panel ============
-        style = ttk.Style()
-        style.configure("TNotebook.Tab", font=("Dubai", 12))
-        control_panel = ttk.Notebook(root)
-        control_panel.place(x=1050, y=1)
-
-        control_frame = Frame(
-            root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=640
+        # ============ Control panel ============
+        self.control_frame = CTkFrame(
+            self.root, height=670, width=360, corner_radius=20
         )
-        control_frame.pack()
+        self.control_frame.place(x=1000, y=30)
 
-        details_frame = Frame(
-            root, bg="#f2f3f4", bd=2, relief="sunken", width=300, height=640
+        # person Details Section
+        details_label = CTkLabel(
+            self.control_frame, text="بيانات العميل", font=("Dubai", 20, "bold")
         )
-        details_frame.pack()
+        details_label.place(x=125, y=10)
 
-        control_panel.add(details_frame, text="التفاصيل")
-        control_panel.add(control_frame, text="الإدارة")
-        control_panel.select(control_frame)
+        # x,y place value
+        x = 35
+        lb_x = 160
+        y = 30
+        # Default font
+        ent_font = ("Dubai", 16)
+        lb_font = ("Dubai", 18, "bold")
 
-        # Elements Options
-        label_options = {"bg": "#f2f3f4", "font": ("Dubai", 13, "bold")}
-        entry_options = {
-            "bg": "white",
-            "font": ("Dubai", 13),
-            "bd": 2,
-            "justify": "center",
-            "width": 25,
-            "relief": "ridge",
-        }
+        # Name Field
+        CTkLabel(self.control_frame, text="الأسم", font=lb_font).place(x=lb_x, y=y + 20)
+        self.name_entry = CTkEntry(
+            self.control_frame,
+            textvariable=self.name,
+            width=300,
+            font=ent_font,
+            justify="center",
+            fg_color=("gray81","#333333")
 
-        frame_title_options = {
-            "font": ("Dubai", 13, "bold"),
-            "bg": "#1ce1c9",
-            "relief": "groove",
-        }
+        )
+        self.name_entry.place(x=x, y=y + 60)
 
-        # ----------- Control Elements -----------
-        # -- Addition
-        add_title = Label(control_frame, text="إضافة عميل", **frame_title_options)
-        add_title.pack(fill=X)
-
-        name_lb = Label(control_frame, text="الأسم", **label_options)
-        name_lb.pack()
-        name_ent = Entry(control_frame, **entry_options, textvariable=self.name)
-        name_ent.pack()
-
-        gender_lb = Label(control_frame, text="النوع", **label_options)
-        gender_lb.pack()
-        gender_ent = ttk.Combobox(
-            control_frame,
-            values=("ذكر", "أنثي"),
-            font=("Dubai", 12),
-            width=23,
+        # Gender Field
+        CTkLabel(self.control_frame, text="النوع", font=lb_font).place(
+            x=lb_x, y=y + 110
+        )
+        self.gender_combo = CTkComboBox(
+            self.control_frame,
+            values=["ذكر", "أنثى"],
+            variable=self.gender,
+            font=ent_font,
+            width=300,
             state="readonly",
-            textvariable=self.gender,
-            justify="center",
+            justify="center",fg_color=("gray81","#333333")
         )
-        gender_ent.pack()
+        self.gender_combo.place(x=x, y=y + 150)
 
-        phone_lb = Label(control_frame, text="رقم الهاتف المحمول", **label_options)
-        phone_lb.pack()
-        phone_ent = Entry(control_frame, **entry_options, textvariable=self.phone)
-        phone_ent.pack()
-
-        email_lb = Label(control_frame, text="البريد الإلكتروني", **label_options)
-        email_lb.pack()
-        email_ent = Entry(control_frame, **entry_options, textvariable=self.email)
-        email_ent.pack()
-
-        address_lb = Label(control_frame, text="العنوان", **label_options)
-        address_lb.pack()
-        address_ent = Entry(control_frame, **entry_options, textvariable=self.address)
-        address_ent.pack()
-
-        # ========= Buttons =========
-        bt_options = {
-            "font": ("Dubai", 11, "bold"),
-            "cursor": "hand2",
-            "width": 20,
-            "relief": "raised",
-            "bd": 2,
-            "bg": "#35f8ae",
-        }
-
-        # place value
-        y = 400
-        x = 60
-
-        # --- Add
-        add_bt = Button(
-            control_frame, text="إضافة", **bt_options, command=self.add_client
+        # Phone Field
+        CTkLabel(self.control_frame, text="رقم الهاتف", font=lb_font).place(
+            x=lb_x - 15, y=y + 200
         )
-
-        add_bt.place(y=y, x=x)
-
-        # --- Update
-        update_bt = Button(
-            control_frame, text="تحديث", **bt_options, command=self.update_client
+        self.phone_entry = CTkEntry(
+            self.control_frame,
+            textvariable=self.phone,
+            width=300,
+            font=ent_font,
+            justify="center",fg_color=("gray81","#333333")
         )
-        update_bt.place(y=y + 55, x=x)
+        self.phone_entry.place(x=x, y=y + 240)
 
-        # --- Clear
-        clear_bt = Button(
-            control_frame,
+        # Email Field
+        CTkLabel(self.control_frame, text="البريد الإلكتروني", font=lb_font).place(
+            x=lb_x - 30, y=y + 290
+        )
+        self.email_entry = CTkEntry(
+            self.control_frame,
+            textvariable=self.email,
+            width=300,
+            font=ent_font,
+            justify="center",fg_color=("gray81","#333333")
+        )
+        self.email_entry.place(x=x, y=y + 330)
+
+        # Address Field
+        CTkLabel(self.control_frame, text="العنوان", font=lb_font).place(
+            x=lb_x, y=y + 380
+        )
+        self.address_entry = CTkEntry(
+            self.control_frame,
+            textvariable=self.address,
+            width=300,
+            font=ent_font,
+            justify="center",fg_color=("gray81","#333333")
+        )
+        self.address_entry.place(x=x, y=y + 420)
+
+        # ================= Buttons ================= #
+        # x,y place value
+        x = 110
+        y = 510
+        # Default font
+        ent_font = ("Dubai", 16)
+        bt_font = ("Dubai", 16, "bold")
+
+        # Add Button
+        self.add_btn = CTkButton(
+            self.control_frame,
+            text="إضافة",
+            command=self.add_person,
+            width=150,
+            height=40,
+            fg_color="#2e8b57",
+            hover_color="#3cb371",
+            font=bt_font
+        )
+        self.add_btn.place(x=x,y=y)
+
+        # Update Button
+        self.update_btn = CTkButton(
+            self.control_frame,
+            text="تحديث",
+            command=self.update_person,
+            width=150,
+            height=40,
+            font=bt_font
+        )
+        self.update_btn.place(x=x,y=y+45)
+
+        # Clear Button
+        self.clear_btn = CTkButton(
+            self.control_frame,
             text="إفراغ الحقول",
-            **bt_options,
             command=self.empty_felids,
+            width=150,
+            height=40,
+            fg_color="#d9534f",
+            hover_color="#ff6b6b",
+            font=bt_font
         )
-        clear_bt.place(y=y + 110, x=x)
+        self.clear_btn.place(x=x,y=y+90)
 
-        # ============  Search ============
-        self.search_frame = Frame(
-            root, bg="#f2f3f4", bd=2,  width=1044, height=45
+        # ================= Menubar ================= #
+        menubar = CTkFrame(
+            root,
+            fg_color=("gray81","#333333"),
+            height=26,
+            width=root.winfo_screenwidth(),
+            corner_radius=0,
         )
-        self.search_frame.place(y=2, x=5)
+        menubar.place(x=0)
 
-        x = 350
-        search_ent = Entry(
-            self.search_frame,
-            font=("Dubai", 11),
-            relief="ridge",
-            justify="center",
-            bd=2,
-            width=50,
-            textvariable=self.search_var,
+        # --- Options ---
+        self.options_bt = tk.Menubutton(
+            menubar, text="خيارات", relief="flat", bg="#333333", fg="white"
         )
-        search_ent.place(x=x, y=2)
+        self.options_bt.place(x=1)
 
-        search_bt = Button(
-            self.search_frame,
-            text="بحث",
-            font=("", 10, "bold"),
-            width=8,
-            bg="#35f8ae",
-            cursor="hand2",
-            relief="raised",
-            command=self.search,
+        self.options = tk.Menu(self.options_bt, tearoff=False)
+        self.options_bt["menu"] = self.options
+
+        # Reset
+        self.options.add_cascade(label="إعادة تعيين", command="ss")
+
+        # --- Sittings ---
+        self.sittings_bt = tk.Menubutton(
+            menubar, text="الإعدادات", relief="flat", bg="#333333", fg="white"
         )
-        search_bt.place(x=x - 80, y=4)
+        self.sittings_bt.place(x=50)
 
-        # ============ Menubar ============
-        menubar = Menu(root)
-        options = Menu(menubar, tearoff=False)
-        options.add_command(label="إعادة تعيين")
+        # Sittings menu
+        self.sittings = tk.Menu(self.sittings_bt, tearoff=False)
+        self.sittings_bt["menu"] = self.sittings
 
-        menubar.add_cascade(label="خيارات", menu=options)
-        root.config(menu=menubar)
+        # Appearance menu
+        self.appearance = tk.Menu(self.sittings,tearoff=False)
+        self.appearance.add_cascade(label="فاتح",command=self.light_mode)
+        self.appearance.add_cascade(label="داكن",command=self.dark_mode)
+        self.sittings.add_cascade(label="المظهر",menu=self.appearance)
 
+        # ============ Popup menu ============
         # --- Menu click
-        self.right_click_menu = Menu(root, tearoff=0)
-        self.right_click_menu.add_command(label="تعديل", command=self.fetch_client_data)
-        self.right_click_menu.add_command(label="حذف", command=self.delete_client)
-
-        # ============ Show clients ============
-        self.clients_frame = Frame(
-            root, bg="white", width=1044, height=634, bd=2, relief="sunken"
+        self.right_click_menu = tk.Menu(root, tearoff=0)
+        self.right_click_menu.add_command(
+            label="تعديل", command=self.fetch_person_data
         )
-        self.clients_frame.place(x=5, y=45)
+        self.right_click_menu.add_command(label="حذف", command=self.delete_person)
 
-        self.info_frame = Frame(self.clients_frame, bd=2, bg="#c2c2c2")
-        self.info_frame.place(x=1, y=608, height=23, width=1040)
+        # --- Top Frame --- #
+        self.top_frame = CTkFrame(self.root, height=65, width=980, corner_radius=20)
+        self.top_frame.place(x=10, y=30)
 
-        # Configure Treeview
-        style.configure("Treeview.Heading", font=("Dubai", 13, "bold"))
-        style.configure("Treeview", font=("Dubai", 11, ""))
-        style.configure("Treeview", rowheight=35)
+        # -- Search Frame
+        self.search_ent = CTkEntry(
+            self.top_frame, width=400, justify="center", font=("Dubai",14),textvariable=self.search_var,fg_color=("gray81","#333333")
+        )
+        self.search_ent.place(x=400, y=10)
 
-        # Create Treeview
-        self.clients_table = ttk.Treeview(
-            self.clients_frame,
+        self.search_bt = CTkButton(self.top_frame, font=("Dubai",14),text="بحث", command=self.search)
+        self.search_bt.place(x=258, y=10)
+
+        # ==================== Persons Table ==================== #
+        self.table_frame = CTkFrame(root, width=980, height=600, corner_radius=0)
+        self.table_frame.place(x=10, y=100)
+
+        self.info_frame = CTkFrame(
+            self.table_frame, height=25, width=980, corner_radius=0
+        )
+        self.info_frame.place(x=0, y=575)
+
+        # Create persons table
+        self.persons_table = ttk.Treeview(
+            self.table_frame,
             columns=("address", "gender", "email", "phone", "name", "id"),
             show="headings",
         )
-        self.clients_table.place(x=18, y=0, height=590, width=1040)
+        self.persons_table.place(x=0, y=0, height=560, width=965)
 
-        self.clients_table.heading("id", text="Id")
-        self.clients_table.heading("name", text="الأسم")
-        self.clients_table.heading("phone", text="رقم الهاتف")
-        self.clients_table.heading("email", text="البريد الإلكتروني")
-        self.clients_table.heading("gender", text="النوع")
-        self.clients_table.heading("address", text="العنوان")
+        # Call function to show persons
+        self.shows_persons()
+
+        # -- Configure Treeview colors
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+        self.style.configure(
+            "Treeview.Heading",
+            font=("Dubai", 13, "bold"),
+            background="#2b2b2b",
+            foreground="white",
+        )
+        self.style.configure(
+            "Treeview",
+            font=("Dubai", 13),
+            rowheight=35,
+            background="#333333",
+            fieldbackground="#333333",
+            foreground="white",
+        )
+
+        self.style.map("Treeview", background=[("selected", "#1f6aa5")])  # Select color
+
+        # -- Table heads
+        self.persons_table.heading("id", text="Id")
+        self.persons_table.heading("name", text="الأسم")
+        self.persons_table.heading("phone", text="رقم الهاتف")
+        self.persons_table.heading("email", text="البريد الإلكتروني")
+        self.persons_table.heading("gender", text="النوع")
+        self.persons_table.heading("address", text="العنوان")
 
         # Format Columns
-        self.clients_table.column("id", anchor="center", width=30)
-        self.clients_table.column("name", anchor="center", width=180)
-        self.clients_table.column("gender", anchor="center", width=60)
-        self.clients_table.column("phone", anchor="center", width=150)
-        self.clients_table.column("email", anchor="center", width=180)
-        self.clients_table.column("address", anchor="center", width=239)
-        self.clients_table.bind("<Button-3>", self.right_click)
-        self.clients_table.bind("<Double-1>", self.client_widow)
+        self.persons_table.column("id", anchor="center", width=30)
+        self.persons_table.column("name", anchor="center", width=180)
+        self.persons_table.column("gender", anchor="center", width=60)
+        self.persons_table.column("phone", anchor="center", width=150)
+        self.persons_table.column("email", anchor="center", width=180)
+        self.persons_table.column("address", anchor="center", width=239)
 
         # Scrollbar
-        scroll_x = Scrollbar(
-            self.clients_frame, orient=HORIZONTAL, command=self.clients_table.xview
+        scroll_x = CTkScrollbar(
+            self.table_frame,
+            width=968,
+            orientation=HORIZONTAL,
+            command=self.persons_table.xview,
         )
-        scroll_x.place(x=1, y=590, width=1040)
+        scroll_x.place(x=0, y=560)
 
-        scroll_y = Scrollbar(
-            self.clients_frame, orient=VERTICAL, command=self.clients_table.yview
+        scroll_y = CTkScrollbar(
+            self.table_frame, height=570, command=self.persons_table.yview
         )
-        scroll_y.place(x=1, height=590)
+        scroll_y.place(x=965, y=0)
 
-        self.clients_table.config(
+        self.persons_table.configure(
             xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set
         )
 
-        self.shows_clients()
+        # ==================== Events ==================== #
+        # -- Persons table events
+        self.persons_table.bind("<Button-3>", self.right_click)
+        self.persons_table.bind("<Double-1>", self.person_window)
 
-        # ============ Events ============
-
-    def right_click(self, event):
-        item = self.clients_table.identify_row(event.y)
-        if item:
-            self.clients_table.selection_set(item)
-            self.right_click_menu.tk_popup(event.x_root, event.y_root)  # عرض القائمة
-
-    # ============ Functions ============
+    # ==================== Functions ==================== #
+    def empty_felids(self):
+        self.name.set("")
+        self.phone.set("")
+        self.email.set("")
+        self.gender.set("")
+        self.address.set("")
+        
     def felids_not_empty(self):
         felids = [
             self.name.get(),
@@ -275,47 +333,52 @@ class ManagementSystem:
                 return False
         else:
             return True
+    
+    def right_click(self, event):
+        item = self.persons_table.identify_row(event.y)
+        if item:
+            self.persons_table.selection_set(item)
+            self.right_click_menu.tk_popup(event.x_root, event.y_root)  # عرض القائمة
 
-    def shows_clients(self):
+    def dark_mode(self):
+        self.options_bt.configure(bg="#333333", fg="white")
+        self.sittings_bt.configure(bg="#333333", fg="white")
 
-        with sqlite3.connect("clients.db") as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM `clients`")
-            rows = cur.fetchall()
+        self.style.configure(
+            "Treeview.Heading",
+            background="#2b2b2b",
+            foreground="white",
+        )
+        self.style.configure(
+            "Treeview",
+            background="#333333",
+            fieldbackground="#333333",
+            foreground="white",
+        )
+        set_appearance_mode("dark")
 
-            # Show clients count in search frame
-            clients_count = len(rows)
-            count_lb = Label(
-                self.info_frame,
-                text=f"Count: {clients_count}",
-                font=("", 10, ""),
-                bg="#c2c2c2",
-            )
-            count_lb.place(x=10)
+    def light_mode(self):
+        self.options_bt.configure(bg="gray81", fg="black")
+        self.sittings_bt.configure(bg="gray81", fg="black")
+        self.style.configure(
+            "Treeview",
+            background="gray81",
+            foreground="black",
+            fieldbackground="gray81",
+        )
+        self.style.configure(
+            "Treeview.Heading", background="gray81", foreground="black"
+        )
+        set_appearance_mode("light")
 
-            # count_value = Label(
-            #     self.info_frame,
-            #     text=clients_count,
-            #     font=("", 10, "bold"),
-            #     bg="#c2c2c2",
-            #     width=4
-            # )
-            # count_value.place(x=55)
-
-        # Show clients in treeview
-        self.clients_table.delete(*self.clients_table.get_children())
-        for row in rows:
-            self.clients_table.insert("", "end", values=row)
-            conn.commit()
-
-    def add_client(self):
+    def add_person(self):
         if self.felids_not_empty():
             try:
-                with sqlite3.connect("clients.db") as conn:
+                with sqlite3.connect("persons.db") as conn:
                     cur = conn.cursor()
 
                     cur.execute(
-                        f"""INSERT INTO `clients` (address,gender,email,phone,name) VALUES(
+                        f"""INSERT INTO `persons` (address,gender,email,phone,name) VALUES(
                   ?,?,?,?,?)""",
                         (
                             self.address.get().strip(),
@@ -336,49 +399,72 @@ class ManagementSystem:
         else:
             messagebox.showerror(title="Error", message="لا يمكن إضافة حقل فارغ")
 
-        self.shows_clients()
+        self.shows_persons()
 
-    def delete_client(self):
-        cursor_row = self.clients_table.selection()
-        client_id_to_del = self.clients_table.item(cursor_row)["values"][5]
+    def delete_person(self):
+        cursor_row = self.persons_table.selection()
+        person_id_to_del = self.persons_table.item(cursor_row)["values"][5]
 
         if messagebox.askquestion(title="حذف عميل", message="حذف العميل") == "yes":
-            with sqlite3.connect("clients.db") as conn:
+            with sqlite3.connect("persons.db") as conn:
                 cur = conn.cursor()
-                cur.execute("DELETE FROM `clients` WHERE id = ?", (client_id_to_del,))
+                cur.execute("DELETE FROM `persons` WHERE id = ?", (person_id_to_del,))
                 conn.commit()
-            self.shows_clients()
+            self.shows_persons()
 
-    def update_client(self):
-        cursor_row = self.clients_table.selection()
-        self.selected_client_id = self.clients_table.item(cursor_row)["values"]
+    def update_person(self):
+        cursor_row = self.persons_table.selection()
+        self.selected_person_id = self.persons_table.item(cursor_row)["values"]
 
-        if self.selected_client_id:
-            with sqlite3.connect("clients.db") as conn:  #
+        if self.selected_person_id:
+            with sqlite3.connect("persons.db") as conn:  #
                 cur = conn.cursor()
                 cur.execute(
-                    "UPDATE `clients` SET address = ?, email = ?, phone = ?, gender = ?, name = ? WHERE id = ?",
+                    "UPDATE `persons` SET address = ?, email = ?, phone = ?, gender = ?, name = ? WHERE id = ?",
                     (
                         self.address.get().strip(),
                         self.email.get().strip(),
                         self.phone.get().strip(),
                         self.gender.get().strip(),
                         self.name.get().strip(),
-                        self.selected_client_id[5],
+                        self.selected_person_id[5],
                     ),
                 )
                 conn.commit()
-            self.shows_clients()
+            self.shows_persons()
             self.empty_felids()
             messagebox.showinfo(title="تحديث",message="تم تحديث بيانات العميل بنجاح")
 
+    def shows_persons(self):
+
+        with sqlite3.connect("persons.db") as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM `persons`")
+            rows = cur.fetchall()
+
+            # Show persons count in search frame
+            persons_count = len(rows)
+            count_lb = CTkLabel(
+                self.info_frame,
+                text=f"Count: {persons_count}",
+                font=("", 14),
+                fg_color=(f"gray81", "#333333"),
+            )
+            count_lb.place(x=10)
+
+        # Show persons in treeview
+        self.persons_table.delete(*self.persons_table.get_children())
+        for row in rows:
+            self.persons_table.insert("", "end", values=row)
+            conn.commit()
+
     def search(self):
 
-        with sqlite3.connect("clients.db") as conn:
+        with sqlite3.connect("persons.db") as conn:
             cur = conn.cursor()
             cur.execute(
                 """
-                SELECT * FROM `clients` 
+                SELECT * FROM `persons` 
                 WHERE `id` = ? 
                 OR 
                 `name` LIKE ? 
@@ -399,66 +485,80 @@ class ManagementSystem:
             )
             rows = cur.fetchall()
 
-            # Show clients count in search frame
-            clients_count = len(rows)
-            count_lb = Label(
+            # Show persons count in search frame
+            persons_count = len(rows)
+            count_lb = CTkLabel(
                 self.info_frame,
-                text=f"Count: {clients_count}",
-                font=("", 10, ""),
-                bg="#c2c2c2",
-                width=10,
+                text=f"Count: {persons_count}",
+                font=("", 14),
+                fg_color=(f"gray81", "#333333"),
             )
-            count_lb.place(x=1)
+            count_lb.place(x=10)
 
-        # Show clients in treeview
-        self.clients_table.delete(*self.clients_table.get_children())
+        # Show persons in treeview
+        self.persons_table.delete(*self.persons_table.get_children())
         for row in rows:
-            self.clients_table.insert("", "end", values=row)
+            # print(row)
+            self.persons_table.insert("", "end", values=row)
             conn.commit()
 
-    def client_widow(self, event):
-        selected = self.clients_table.selection()
+    def person_window(self, event):
+        selected = self.persons_table.selection()
         if selected:
-            window = Tk()
-            window.geometry("400x400")
-            window.iconbitmap(r"images\management.ico")
-            window.configure(background="#c2c2c2")
-            client_data = self.clients_table.item(selected)["values"]
-            window.title(f"{client_data[4]}")
-            window.resizable(False, False)
+            person_data = self.persons_table.item(selected)["values"]
 
-            lb = Label(window, text=f"تفاصيل", font=("Dubai", 14, "bold"))
-            lb.pack(pady=100)
+            self.window = CTkToplevel(self.root)
+            self.window.iconbitmap(r"images\management.ico")
+            self.window.title(f"تفاصيل العميل: {person_data[4]}")
+            self.window.geometry("400x400")
+            self.window.resizable(False, False)
 
-            window.mainloop()
+            # person details frame
+            details_frame = CTkFrame(self.window, corner_radius=10)
+            details_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-    def fetch_client_data(self):
-        client_selected = self.clients_table.selection()
-        client_data = self.clients_table.item(client_selected)["values"]
+            # person info labels
+            CTkLabel(
+                details_frame, text="معلومات العميل", font=("Dubai", 18, "bold")
+            ).pack(pady=(20, 30))
 
-        self.name.set(client_data[4])
-        self.email.set(client_data[2])
-        self.gender.set(client_data[1])
-        self.address.set(client_data[0])
+            title_ls = [
+                " :الأسم",
+                " :الهاتف",
+                " :البريد",
+                " :النوع",
+                " :العنوان",
+                " :المعرف",
+            ]
+            a = 80
+            b = 4
+            for label_text in title_ls:
+                l1 = CTkLabel(details_frame, text=label_text, font=("Dubai", 16))
+                l1.place(x=250, y=a)
+                l2 = CTkLabel(details_frame, text=person_data[b], font=("Dubai", 16))
+                l2.place(x=50, y=a)
+                a += 30
+                b -= 1
+
+
+    def fetch_person_data(self):
+        person_selected = self.persons_table.selection()
+        person_data = self.persons_table.item(person_selected)["values"]
+
+        self.name.set(person_data[4])
+        self.email.set(person_data[2])
+        self.gender.set(person_data[1])
+        self.address.set(person_data[0])
 
         # Set Phone with zero
-        with sqlite3.connect("clients.db") as conn:
+        with sqlite3.connect("persons.db") as conn:
             cur = conn.cursor()
-            cur.execute(f"SELECT phone FROM `clients` WHERE id = ?", (client_data[5],))
-            client_phone = cur.fetchone()
-            self.phone.set(client_phone[0])
-
-    def empty_felids(self):
-        self.name.set("")
-        self.phone.set("")
-        self.email.set("")
-        self.gender.set("")
-        self.address.set("")
-
-
-# ============ Run App ============
-
-root = Tk()
-
-ManagementSystem(root)
-root.mainloop()
+            cur.execute(f"SELECT phone FROM `persons` WHERE id = ?", (person_data[5],))
+            person_phone = cur.fetchone()
+            self.phone.set(person_phone[0])
+# ========== Run the App ========== #
+if __name__ == "__main__":
+    root = CTk()
+    set_appearance_mode("dark")
+    ManagementSystem(root)
+    root.mainloop()
