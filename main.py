@@ -2,7 +2,6 @@ from customtkinter import *
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-
 import sqlite3
 
 
@@ -70,8 +69,7 @@ class ManagementSystem:
             width=300,
             font=ent_font,
             justify="center",
-            fg_color=("gray81","#333333")
-
+            fg_color=("gray81", "#333333"),
         )
         self.name_entry.place(x=x, y=y + 60)
 
@@ -86,7 +84,8 @@ class ManagementSystem:
             font=ent_font,
             width=300,
             state="readonly",
-            justify="center",fg_color=("gray81","#333333")
+            justify="center",
+            fg_color=("gray81", "#333333"),
         )
         self.gender_combo.place(x=x, y=y + 150)
 
@@ -99,7 +98,8 @@ class ManagementSystem:
             textvariable=self.phone,
             width=300,
             font=ent_font,
-            justify="center",fg_color=("gray81","#333333")
+            justify="center",
+            fg_color=("gray81", "#333333"),
         )
         self.phone_entry.place(x=x, y=y + 240)
 
@@ -112,7 +112,8 @@ class ManagementSystem:
             textvariable=self.email,
             width=300,
             font=ent_font,
-            justify="center",fg_color=("gray81","#333333")
+            justify="center",
+            fg_color=("gray81", "#333333"),
         )
         self.email_entry.place(x=x, y=y + 330)
 
@@ -125,7 +126,8 @@ class ManagementSystem:
             textvariable=self.address,
             width=300,
             font=ent_font,
-            justify="center",fg_color=("gray81","#333333")
+            justify="center",
+            fg_color=("gray81", "#333333"),
         )
         self.address_entry.place(x=x, y=y + 420)
 
@@ -146,9 +148,9 @@ class ManagementSystem:
             height=40,
             fg_color="#2e8b57",
             hover_color="#3cb371",
-            font=bt_font
+            font=bt_font,
         )
-        self.add_btn.place(x=x,y=y)
+        self.add_btn.place(x=x, y=y)
 
         # Update Button
         self.update_btn = CTkButton(
@@ -157,9 +159,9 @@ class ManagementSystem:
             command=self.update_person,
             width=150,
             height=40,
-            font=bt_font
+            font=bt_font,
         )
-        self.update_btn.place(x=x,y=y+45)
+        self.update_btn.place(x=x, y=y + 45)
 
         # Clear Button
         self.clear_btn = CTkButton(
@@ -170,14 +172,14 @@ class ManagementSystem:
             height=40,
             fg_color="#d9534f",
             hover_color="#ff6b6b",
-            font=bt_font
+            font=bt_font,
         )
-        self.clear_btn.place(x=x,y=y+90)
+        self.clear_btn.place(x=x, y=y + 90)
 
         # ================= Menubar ================= #
         menubar = CTkFrame(
             root,
-            fg_color=("gray81","#333333"),
+            fg_color=("gray81", "#333333"),
             height=26,
             width=root.winfo_screenwidth(),
             corner_radius=0,
@@ -197,6 +199,7 @@ class ManagementSystem:
         self.options.add_cascade(label="إعادة تعيين", command="ss")
 
         # --- Sittings ---
+
         self.sittings_bt = tk.Menubutton(
             menubar, text="الإعدادات", relief="flat", bg="#333333", fg="white"
         )
@@ -207,17 +210,15 @@ class ManagementSystem:
         self.sittings_bt["menu"] = self.sittings
 
         # Appearance menu
-        self.appearance = tk.Menu(self.sittings,tearoff=False)
-        self.appearance.add_cascade(label="فاتح",command=self.light_mode)
-        self.appearance.add_cascade(label="داكن",command=self.dark_mode)
-        self.sittings.add_cascade(label="المظهر",menu=self.appearance)
+        self.appearance = tk.Menu(self.sittings, tearoff=False)
+        self.appearance.add_cascade(label="فاتح", command=self.light_mode)
+        self.appearance.add_cascade(label="داكن", command=self.dark_mode)
+        self.sittings.add_cascade(label="المظهر", menu=self.appearance)
 
         # ============ Popup menu ============
         # --- Menu click
         self.right_click_menu = tk.Menu(root, tearoff=0)
-        self.right_click_menu.add_command(
-            label="تعديل", command=self.fetch_person_data
-        )
+        self.right_click_menu.add_command(label="تعديل", command=self.fetch_person_data)
         self.right_click_menu.add_command(label="حذف", command=self.delete_person)
 
         # --- Top Frame --- #
@@ -226,11 +227,18 @@ class ManagementSystem:
 
         # -- Search Frame
         self.search_ent = CTkEntry(
-            self.top_frame, width=400, justify="center", font=("Dubai",14),textvariable=self.search_var,fg_color=("gray81","#333333")
+            self.top_frame,
+            width=400,
+            justify="center",
+            font=("Dubai", 14),
+            textvariable=self.search_var,
+            fg_color=("gray81", "#333333"),
         )
         self.search_ent.place(x=400, y=10)
 
-        self.search_bt = CTkButton(self.top_frame, font=("Dubai",14),text="بحث", command=self.search)
+        self.search_bt = CTkButton(
+            self.top_frame, font=("Dubai", 14), text="بحث", command=self.search
+        )
         self.search_bt.place(x=258, y=10)
 
         # ==================== Persons Table ==================== #
@@ -272,6 +280,10 @@ class ManagementSystem:
         )
 
         self.style.map("Treeview", background=[("selected", "#1f6aa5")])  # Select color
+
+        # Set color depending on the appearance of the system
+        if get_appearance_mode() == "Light":
+            self.light_mode()
 
         # -- Table heads
         self.persons_table.heading("id", text="Id")
@@ -319,7 +331,7 @@ class ManagementSystem:
         self.email.set("")
         self.gender.set("")
         self.address.set("")
-        
+
     def felids_not_empty(self):
         felids = [
             self.name.get(),
@@ -333,7 +345,7 @@ class ManagementSystem:
                 return False
         else:
             return True
-    
+
     def right_click(self, event):
         item = self.persons_table.identify_row(event.y)
         if item:
@@ -392,7 +404,6 @@ class ManagementSystem:
                     self.empty_felids()
                 messagebox.showinfo(title="إضافة", message="نم إضافة العميل بنجاح")
 
-
             except:
                 messagebox.showerror(title="Error", message="البريد الإلكتروني موجود")
 
@@ -433,7 +444,7 @@ class ManagementSystem:
                 conn.commit()
             self.shows_persons()
             self.empty_felids()
-            messagebox.showinfo(title="تحديث",message="تم تحديث بيانات العميل بنجاح")
+            messagebox.showinfo(title="تحديث", message="تم تحديث بيانات العميل بنجاح")
 
     def shows_persons(self):
 
@@ -540,7 +551,6 @@ class ManagementSystem:
                 a += 30
                 b -= 1
 
-
     def fetch_person_data(self):
         person_selected = self.persons_table.selection()
         person_data = self.persons_table.item(person_selected)["values"]
@@ -556,9 +566,12 @@ class ManagementSystem:
             cur.execute(f"SELECT phone FROM `persons` WHERE id = ?", (person_data[5],))
             person_phone = cur.fetchone()
             self.phone.set(person_phone[0])
+
+
 # ========== Run the App ========== #
 if __name__ == "__main__":
     root = CTk()
-    set_appearance_mode("dark")
+    set_appearance_mode("system")
+    print(get_appearance_mode())
     ManagementSystem(root)
     root.mainloop()
