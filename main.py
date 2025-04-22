@@ -1,8 +1,9 @@
+import sqlite3
 from customtkinter import *
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import sqlite3
+from CTkMessagebox import CTkMessagebox
 
 
 # Connect to the database
@@ -199,7 +200,6 @@ class ManagementSystem:
         self.options.add_cascade(label="إعادة تعيين", command="ss")
 
         # --- Sittings ---
-
         self.sittings_bt = tk.Menubutton(
             menubar, text="الإعدادات", relief="flat", bg="#333333", fg="white"
         )
@@ -215,6 +215,18 @@ class ManagementSystem:
         self.appearance.add_cascade(label="داكن", command=self.dark_mode)
         self.sittings.add_cascade(label="المظهر", menu=self.appearance)
 
+        self.help_bt = tk.Menubutton(
+            menubar, text="المساعدة", relief="flat", bg="#333333", fg="white"
+        )
+        self.help_bt.place(x=110)
+
+        self.help = tk.Menu(self.help_bt,tearoff=False)
+        self.help_bt["menu"]=self.help
+
+
+
+        # About
+        self.help.add_cascade(label="من نحن",command=self.about)
         # ============ Popup menu ============
         # --- Menu click
         self.right_click_menu = tk.Menu(root, tearoff=0)
@@ -402,13 +414,22 @@ class ManagementSystem:
                     )
                     conn.commit()
                     self.empty_felids()
-                messagebox.showinfo(title="إضافة", message="نم إضافة العميل بنجاح")
+                CTkMessagebox(
+                    title="إضافة", message="بنجاح العميل إضافة تم", option_1="Ok"
+                )
 
             except:
-                messagebox.showerror(title="Error", message="البريد الإلكتروني موجود")
+                CTkMessagebox(
+                    title="Error",
+                    message="موجود الإلكتروني البريد",
+                    option_1="Ok",
+                    icon="cancel",
+                )
 
         else:
-            messagebox.showerror(title="Error", message="لا يمكن إضافة حقل فارغ")
+            CTkMessagebox(
+                title="Error", message="فارغ حقل إضافة يمكن لا", option_1="Ok"
+            )
 
         self.shows_persons()
 
@@ -416,7 +437,16 @@ class ManagementSystem:
         cursor_row = self.persons_table.selection()
         person_id_to_del = self.persons_table.item(cursor_row)["values"][5]
 
-        if messagebox.askquestion(title="حذف عميل", message="حذف العميل") == "yes":
+        if (
+            CTkMessagebox(
+                title="حذف",
+                message="العميل حذف",
+                option_1="نعم",
+                option_2="لا",
+                icon="question",
+            ).get()
+            == "نعم"
+        ):
             with sqlite3.connect("persons.db") as conn:
                 cur = conn.cursor()
                 cur.execute("DELETE FROM `persons` WHERE id = ?", (person_id_to_del,))
@@ -444,7 +474,9 @@ class ManagementSystem:
                 conn.commit()
             self.shows_persons()
             self.empty_felids()
-            messagebox.showinfo(title="تحديث", message="تم تحديث بيانات العميل بنجاح")
+            CTkMessagebox(
+                title="تحديث", message="بنجاح العميل بيانات تحديث تم", icon="check"
+            )
 
     def shows_persons(self):
 
@@ -567,11 +599,17 @@ class ManagementSystem:
             person_phone = cur.fetchone()
             self.phone.set(person_phone[0])
 
+    def about(self):
+      CTkMessagebox(title="نحن من", icon="",option_1="Ok",font=("Arial",14),
+      message="Management System"
+      "\nversion: 1.0"
+      "\nDeveloped by: Adhm Rabeea"
+      )
+
 
 # ========== Run the App ========== #
 if __name__ == "__main__":
     root = CTk()
     set_appearance_mode("system")
-    print(get_appearance_mode())
     ManagementSystem(root)
     root.mainloop()
