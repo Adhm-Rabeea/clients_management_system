@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from CTkMessagebox import CTkMessagebox
+import login
+
 
 
 # Connect to the database
@@ -220,13 +222,11 @@ class ManagementSystem:
         )
         self.help_bt.place(x=110)
 
-        self.help = tk.Menu(self.help_bt,tearoff=False)
-        self.help_bt["menu"]=self.help
-
-
+        self.help = tk.Menu(self.help_bt, tearoff=False)
+        self.help_bt["menu"] = self.help
 
         # About
-        self.help.add_cascade(label="من نحن",command=self.about)
+        self.help.add_cascade(label="من نحن", command=self.about)
         # ============ Popup menu ============
         # --- Menu click
         self.right_click_menu = tk.Menu(root, tearoff=0)
@@ -600,16 +600,23 @@ class ManagementSystem:
             self.phone.set(person_phone[0])
 
     def about(self):
-      CTkMessagebox(title="نحن من", icon="",option_1="Ok",font=("Arial",14),
-      message="Management System"
-      "\nversion: 1.0"
-      "\nDeveloped by: Adhm Rabeea"
-      )
+        CTkMessagebox(
+            title="نحن من",
+            icon="",
+            option_1="Ok",
+            font=("Arial", 14),
+            message="Management System" "\nversion: 1.0" "\nDeveloped by: Adhm Rabeea",
+        )
 
 
 # ========== Run the App ========== #
 if __name__ == "__main__":
-    root = CTk()
-    set_appearance_mode("system")
-    ManagementSystem(root)
-    root.mainloop()
+    login_root = CTk()
+    login_app = login.Login(login_root)
+    login_root.mainloop()
+    
+    if login_app.check_var:
+        main_root = CTk()
+        app = ManagementSystem(main_root)
+        
+        main_root.mainloop()
