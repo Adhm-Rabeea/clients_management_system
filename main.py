@@ -7,7 +7,6 @@ from CTkMessagebox import CTkMessagebox
 import login
 
 
-
 # Connect to the database
 with sqlite3.connect("persons.db") as conn:
     cur = conn.cursor()
@@ -367,6 +366,7 @@ class ManagementSystem:
     def dark_mode(self):
         self.options_bt.configure(bg="#333333", fg="white")
         self.sittings_bt.configure(bg="#333333", fg="white")
+        self.help_bt.configure(bg="#333333", fg="white")
 
         self.style.configure(
             "Treeview.Heading",
@@ -384,6 +384,7 @@ class ManagementSystem:
     def light_mode(self):
         self.options_bt.configure(bg="gray81", fg="black")
         self.sittings_bt.configure(bg="gray81", fg="black")
+        self.help_bt.configure(bg="gray81", fg="black")
         self.style.configure(
             "Treeview",
             background="gray81",
@@ -492,6 +493,7 @@ class ManagementSystem:
                 text=f"Count: {persons_count}",
                 font=("", 14),
                 fg_color=(f"gray81", "#333333"),
+                width=80,
             )
             count_lb.place(x=10)
 
@@ -535,6 +537,7 @@ class ManagementSystem:
                 text=f"Count: {persons_count}",
                 font=("", 14),
                 fg_color=(f"gray81", "#333333"),
+                width=80,
             )
             count_lb.place(x=10)
 
@@ -614,9 +617,9 @@ if __name__ == "__main__":
     login_root = CTk()
     login_app = login.Login(login_root)
     login_root.mainloop()
-    
+
     if login_app.check_var:
         main_root = CTk()
         app = ManagementSystem(main_root)
-        
+
         main_root.mainloop()
